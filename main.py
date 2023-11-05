@@ -11,7 +11,7 @@ temp_sens = TempSensor(gain, samples_per_second)
 task_measure = TaskTimer(1, temp_sens.measure_and_update)
 task_measure.start()
 
-time.sleep(30)
+time.sleep(5)
 
 task_measure.stop()
 

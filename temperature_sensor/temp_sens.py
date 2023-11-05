@@ -20,25 +20,23 @@ class TempSensor:
         # Read the ADC
         self.raw_data = self.adc.read_adc(channel, self.gain, self.samples_per_second)
         print(f"Raw data: {self.raw_data}")
+
         # Convert the ADC value to a voltage
-        self.voltage_measurements = float(self.raw_data / 32767.0) * 4.095
+        self.voltage_measurements = float(self.raw_data) / 32767.0 * 4.096
         print(f"Voltage: {self.voltage_measurements}")
 
+        # Calculate the temperature using the steinhart-hart equation
         __A = 0.001129148  # 0.001129148 is the A constant of our steinhart-hart equation
         __B = 0.000234125  # 0.000234125 is the B constant of our steinhart-hart equation
         __C = 0.0000000876741  # 0.0000000876741 is the C constant of our steinhart-hart equation
 
         __RES = 10000  # 10 kΩ is the resistance of the thermistor
-        __VOLT = 5.5  # 5.5 V is the maximum input voltage of the ADC
+        __VOLT = 3.3  # 3.3 V is the voltage of the thermistor
 
         # Calculate the resistance based on our measured voltage
-        res = self.voltage_measurements / (__VOLT - self.voltage_measurements) * __RES
-        print(f"Resistance: {res}")
-
-        # Calculate the temperature based on our resistance
-        # temp = 1 / (__A + (__B * np.log(res)) + (__C * np.power(np.log(res), 3))) - 273.15
-
-        temp = 1 / (np.log(res / __RES) / 3950 + 1 / (9 + 273.15)) - 273.15
+        temp = np.log(__RES / self.voltage_measurements) * (__VOLT - self.voltage_measurements)
+        temp = 1 / (__A + (__B + __C * np.power(temp, 2)) * temp)
+        temp -= 273.15
 
         # Round the temperature to 2 decimal places for readability
         temp = round(temp, 2)
