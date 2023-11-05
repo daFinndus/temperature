@@ -34,9 +34,10 @@ class TempSensor:
         __VOLT = 3.3  # 3.3 V is the voltage of the thermistor
 
         # Calculate the resistance based on our measured voltage
+        # Error: Temperature way too high ~ 600 °C
         temp = np.log(__RES / self.voltage_measurements) * (__VOLT - self.voltage_measurements)
-        temp = 1 / (__A + (__B + __C * np.power(temp, 2)) * temp)
-        temp -= 273.15
+        temp = 1 / (__A + (__B + __C * np.power(temp, 2)) * temp)  # Calculate the temperature in Kelvin
+        temp = temp - 273.15  # Translate from Kelvin to Celsius
 
         # Round the temperature to 2 decimal places for readability
         temp = round(temp, 2)
