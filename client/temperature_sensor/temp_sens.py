@@ -5,6 +5,7 @@ import numpy as np
 class TempSensor:
     def __init__(self, gain, samples_per_second):
         self.adc = Adafruit_ADS1x15.ADS1115()  # Create an ADS1115 ADC (16-bit) instance
+        self.adc_channel = 0
         self.raw_data = None
         self.voltage_measurements = None
         self.gain = gain  # Set the gain to 1
@@ -13,9 +14,9 @@ class TempSensor:
         self.ys = []  # Create empty lists for our y values
 
     # Function to measure the temperature
-    def measure_temp(self, channel):
+    def measure_temp(self):
         # Read the ADC
-        self.raw_data = self.adc.read_adc(channel, self.gain, self.samples_per_second)
+        self.raw_data = self.adc.read_adc(self.adc_channel, self.gain, self.samples_per_second)
         print(f"Raw data: {self.raw_data}")
 
         # Convert the ADC value to a voltage

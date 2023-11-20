@@ -1,11 +1,14 @@
-from temperature_sensor.temp_sens import TempSensor
+from server import MyServer
 
-gain = 1
-samples_per_second = 64
-adc_channel_0 = 0
-temp_sens = TempSensor(gain, samples_per_second)
 
-# Task: Control the steppermotor based on our temperature
-# T <= 25 °C = The motor is moved by 0 degrees
-# 25 °C < T < 30 °C = The motor is moved by 10 - 80 degrees
-# T >= 30 °C = The motor is moved by 90 degrees
+# Function to set up the socket and start our server
+def start_server():
+    server = MyServer()  # Initialize our server
+
+    # Wait until the server is stopped
+    while not server.exit:
+        pass
+
+
+if __name__ == "__main__":
+    start_server()
