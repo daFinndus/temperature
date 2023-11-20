@@ -1,9 +1,6 @@
 import Adafruit_ADS1x15
 import numpy as np
 
-adc_channel_0 = 0
-adc_channel_1 = 1
-
 
 class TempSensor:
     def __init__(self, gain, samples_per_second):
@@ -22,21 +19,21 @@ class TempSensor:
         print(f"Raw data: {self.raw_data}")
 
         # Convert the ADC value to a voltage
-        self.voltage_measurements = float(self.raw_data) / 32767.0 * 4.096
+        self.voltage_measurements = float(self.raw_data) / 32767.0 * 4.095
         print(f"Voltage: {self.voltage_measurements}")
 
-        # Calculate the temperature using the steinhart-hart equation
+        # Saving constants for our equation which we'll be using later
         __A = 0.001129148  # 0.001129148 is the A constant of our steinhart-hart equation
         __B = 0.000234125  # 0.000234125 is the B constant of our steinhart-hart equation
         __C = 0.0000000876741  # 0.0000000876741 is the C constant of our steinhart-hart equation
 
+        # Fixed values thermistor
         __RES = 10000  # 10 kΩ is the resistance of the thermistor
-        __VOLT = 3.3  # 3.3 V is the voltage of the thermistor
+        __VOLT = 3.3  # 3.3 V is the voltage of our thermistor
 
-        # Calculate the resistance based on our measured voltage
-        # Error: Temperature way too high ~ 600 °C
-        temp = np.log(__RES / self.voltage_measurements) * (__VOLT - self.voltage_measurements)
-        temp = 1 / (__A + (__B + __C * np.power(temp, 2)) * temp)  # Calculate the temperature in Kelvin
+        # Calculate the temperature based on our voltage values by using the steinhart-hart equation
+        temp = __RES / (__VOLT / self.voltage_measurements - 1)
+        temp = 1 / (__A + __B * np.log(temp) + __C * np.power(np.log(temp), 3))
         temp = temp - 273.15  # Translate from Kelvin to Celsius
 
         # Round the temperature to 2 decimal places for readability
