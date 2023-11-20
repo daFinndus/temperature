@@ -5,7 +5,7 @@ import RPi.GPIO as GPIO
 
 class StepperMotor:
     def __init__(self):
-        self.__pins = [17, 27, 18, 22]  # Save pins
+        self.__pins = [17, 27, 22, 18]  # Save pins
         self.__STEP_SEQUENCE = (
             (1, 0, 0, 1),
             (1, 0, 0, 0),
@@ -28,7 +28,7 @@ class StepperMotor:
             GPIO.setup(pin, GPIO.OUT)
             GPIO.output(pin, 0)
 
-        self.__delay_after_step = 200  # Delay after each step in Hz
+        self.__delay_after_step = 1 / 400  # Delay after each step in Hz
         self.debug_mode = False  # Boolean for some debug messages
 
     # Function to set the delay after each step
@@ -67,11 +67,13 @@ class StepperMotor:
     def do_clockwise_degrees(self, degrees):
         steps = int(degrees / (5.625 / 64))
         self.do_clockwise_step(steps)
+        print(f"Moved motor clockwise by {degrees}°.")
 
     # Function to move the motor counterclockwise by degrees
     def do_counterclockwise_degrees(self, degrees):
         steps = int(degrees / (5.625 / 64))
         self.do_counterclockwise_step(steps)
+        print(f"Moved motor counterclockwise by {degrees}°.")
 
     # Function to clean up all pins
     def clean_up_gpio(self):

@@ -1,3 +1,5 @@
+import time
+
 from client import MyClient
 
 
@@ -11,4 +13,9 @@ def start_client():
 
 
 if __name__ == "__main__":
-    start_client()
+    try:
+        start_client()
+    except KeyboardInterrupt as e:
+        print("Application will be closed..")
+        time.sleep(1)
+        exit()
