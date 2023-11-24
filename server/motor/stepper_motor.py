@@ -67,17 +67,18 @@ class StepperMotor:
     def do_clockwise_degrees(self, degrees):
         steps = int(degrees / (5.625 / 64))
         self.do_clockwise_step(steps)
-        print(f"Moved motor clockwise by {degrees}°.")
 
     # Function to move the motor counterclockwise by degrees
     def do_counterclockwise_degrees(self, degrees):
         steps = int(degrees / (5.625 / 64))
         self.do_counterclockwise_step(steps)
-        print(f"Moved motor counterclockwise by {degrees}°.")
 
     # Function to clean up all pins
     def clean_up_gpio(self):
-        for pin in self.__pins:
-            GPIO.output(pin, 0)
-        GPIO.cleanup()
-        print("Cleaned up all pins.")
+        try:
+            for pin in self.__pins:
+                GPIO.output(pin, 0)
+            GPIO.cleanup()
+            print("Cleaned up all pins.")
+        except Exception as e:
+            pass

@@ -18,8 +18,6 @@ class MyClient:
         self.samples_per_second = 64
         self.temperature_sensor = TempSensor(self.gain, self.samples_per_second)
 
-        time.sleep(1)
-
         self.__TEMP_MIN = 25  # Minimum temperature
         self.__TEMP_MAX = 30  # Maximum temperature
 
@@ -32,7 +30,7 @@ class MyClient:
         self.degrees_diff = 90 if self.temp >= 30 else 0  # Store the last degree difference value
         print(f"Init degrees_diff: {self.degrees_diff}°")
 
-        self.host = input("Enter Server-IP Address: ").replace(" ", "")  # Set IP of host
+        self.host = input("\nEnter Server-IP Address: ").replace(" ", "")  # Set IP of host
         self.name = f"{gethostname()}:{self.__SERVER_PORT}"
 
         self.data_recv = None  # Storage for received messages
@@ -51,9 +49,7 @@ class MyClient:
         self.thread_send = Thread(target=self.worker_send)  # Setup thread for sending messages
         self.thread_send.start()  # Start thread to send messages
 
-        self.lock = threading.Lock()  # Lock for the shutdown function
-
-    # Funktion, um die aktuelle Temperatur zu erhalten und die Temperaturvariable zu aktualisieren
+    # Function for receiving the temperature and degrees from our sensor
     def get_temp(self):
         temp_last = self.temp  # Store the last temperature value
         temp_new = self.temperature_sensor.measure_temp()  # Get the current temperature
@@ -76,22 +72,35 @@ class MyClient:
     # Function to translate our temperature difference into degrees
     def get_degrees(self):
         degrees = round(self.temp_diff * 18, 1)  # Calculate the degrees from the temperature difference
+        degrees_diff = self.degrees_diff  # Store the last degree difference
 
         self.degrees_diff += degrees  # Set the current degree difference as the last degree difference
         self.degrees = degrees  # Set the current degrees as the last degrees
 
+        # Check if the degree difference is less than 0 or the temperature is the minimum temperature
+        if self.degrees_diff < 0 or self.temp <= self.__TEMP_MIN:
+            self.degrees = 0 - degrees_diff  # Moving exactly to 0°
+            self.degrees_diff = 0  # Set the degree difference to 0
+        # Check if the degree difference is greater than 90 or the temperature is the maximum temperature
+        elif self.degrees_diff > 90 or self.temp >= self.__TEMP_MAX:
+            self.degrees = 90 - degrees_diff  # Moving to 90°
+            self.degrees_diff = 90  # Set the degree difference to 90
+
+        degrees = self.degrees  # Store the degrees
+        degrees_diff = self.degrees_diff  # Store the degree difference
+
         print(f"Moving degrees: {self.degrees}°, Total degrees: {self.degrees_diff}°")
 
-        return degrees
+        return degrees, degrees_diff  # Return the degrees and the degree difference
 
     # Function to send messages
     def worker_send(self):
         while not self.quit:
             try:
                 temp_data = self.get_temp()  # Get the current temperature
-                degrees_data = self.get_degrees()  # Degrees the motor should turn
+                degrees_data, degrees_diff_data = self.get_degrees()  # Degrees the motor should turn
 
-                json_string = self.encode_json(temp_data, degrees_data)  # Store our data into a json object
+                json_string = self.encode_json(temp_data, degrees_data, degrees_diff_data)  # Store into json object
                 byte_message = self.encode_pickle(json_string)  # Translate our json object into bytes
 
                 self.data_send = byte_message  # Store the bytes into the data_send variable
@@ -99,16 +108,17 @@ class MyClient:
                 # Send the server the data_send string
                 self.socket_connection.send(self.data_send)
 
-                # Sleep for a second
+                # Sleep for three seconds
                 time.sleep(3)
             except Exception as e:  # Catch error and print
                 print(f"Error occurred in sending message: {e}")
+                threading.Thread(target=self.shutdown).start()
         print("Stopped thread because self.quit is true.")
 
     # Function to turn a message into json
     @staticmethod
-    def encode_json(temp, degrees):
-        json_object = {"Temperature": temp, "Degrees": degrees}
+    def encode_json(temp, degrees, degrees_diff):
+        json_object = {"temperature": temp, "degrees": degrees, "degrees_diff": degrees_diff}
         # Also give frequency (speed) and degrees in the object
         json_string = json.dumps(json_object)
 
@@ -119,3 +129,17 @@ class MyClient:
     def encode_pickle(json_string):
         byte_message = pickle.dumps(json_string)
         return byte_message
+
+    # Function to shut down the client
+    def shutdown(self):
+        self.quit = True  # Stop the thread
+        self.exit = True  # Stop the whole application
+        print("Shutting down client..")
+        time.sleep(1)
+        self.thread_send.join()  # Wait until the thread is stopped
+        print("Stopping thread..")
+        time.sleep(1)
+        self.socket_connection.close()  # Close the socket connection
+        print("Connection closed.")
+        time.sleep(1)
+        exit()
