@@ -92,6 +92,7 @@ class MyServer:
         functions = {
             "help": self.return_help,
             "info": self.return_info,
+            "reset": lambda: threading.Thread(target=self.reset_connection).start(),
             "shutdown": lambda: threading.Thread(target=self.shutdown).start(),
         }
 
@@ -109,6 +110,7 @@ class MyServer:
     def return_help(self):
         _help_dict = {
             "info": "Return current temperature and the total degrees the motor has turned.",
+            "reset": "Reset the current connection and listen for clients again.",
             "shutdown": "Shutdown the server.",
         }
 
@@ -117,6 +119,40 @@ class MyServer:
 
     def return_info(self):
         print(f"Temperature: {self.temp}°C, Total-Degrees: {self.degrees}°")
+
+    # Reset the current connection and listen for clients again
+    def reset_connection(self):
+        print(f"Client {self.remotehost}:{self.remoteport} has disconnected.")
+        self.socket_connection.close()  # Socket schließen
+        print(f"Closed socket for: {self.name}")
+        print(f"Sleeping for 5 seconds...")
+        time.sleep(5)
+        self.quit = True  # Stop everything that depends on exit
+        self.thread_recv.join()  # Thread für den Empfang beenden
+        print(f"Stopped thread for receiving new messages.")
+
+        # Erneut auf Verbindungen warten
+        print("Going to setup the socket again...")
+        time.sleep(1)
+        self.socket_connection = socket(AF_INET, SOCK_STREAM)  # Create IpV4-TCP/IP-socket
+        self.socket_connection.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)  # Make IP reusable
+        self.socket_connection.bind(('', self.__ECHO_PORT))  # Bind IP to socket
+        self.socket_connection.listen(1)  # Warten auf neue Clients
+
+        print("Waiting for a new client...")
+
+        # Warten auf neue Verbindung
+        self.conn, (self.remotehost, self.remoteport) = self.socket_connection.accept()
+        print(f"Connected with '{self.remotehost}:{self.remoteport}'.")
+
+        # Starten des Empfangsthreads für den neuen Client
+        self.quit = False
+
+        self.thread_recv = threading.Thread(target=self.worker_recv)  # Setup thread for receiving messages
+        self.thread_func = threading.Thread(target=self.input_function)  # Setup thread for receiving messages
+
+        self.thread_recv.start()  # Start thread to receive messages
+        self.thread_func.start()  # Start thread to input functions
 
     # Function to shut down the server
     def shutdown(self):
