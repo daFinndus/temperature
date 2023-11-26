@@ -1,8 +1,8 @@
 import json
 import pickle
-import threading
 import time
 
+from threading import Thread
 from socket import *
 
 import motor.stepper_motor as sp
@@ -18,6 +18,7 @@ class MyServer:
         self.name = f"{gethostname()}:{self.__ECHO_PORT}"  # Name of the server
 
         self._motor = sp.StepperMotor()  # Initialize stepper motor object
+        self._motor_power = None  # Boolean to check if the motor is on or off
 
         self.data_recv = None  # Storage for received messages
         self.data_send = None  # Storage for sent messages
@@ -39,8 +40,8 @@ class MyServer:
         self.exit = False  # Initiate boolean to end it all
         self.quit = False  # Initiate boolean to stop threads
 
-        self.thread_recv = threading.Thread(target=self.worker_recv)  # Setup thread for receiving messages
-        self.thread_func = threading.Thread(target=self.input_function)  # Setup thread for receiving messages
+        self.thread_recv = Thread(target=self.worker_recv)  # Setup thread for receiving messages
+        self.thread_func = Thread(target=self.input_function)  # Setup thread for receiving messages
 
         self.thread_recv.start()  # Start thread to receive messages
         self.thread_func.start()  # Start thread to input functions
@@ -51,6 +52,8 @@ class MyServer:
 
     # Function to receive messages
     def worker_recv(self):
+        motor_thread = None  # Initialize motor thread
+
         while not self.quit:  # While self.exit is false
             self.data_recv = self.conn.recv(self.__BUFSIZE)  # Receive data from the client with certain bufsize
 
@@ -58,25 +61,32 @@ class MyServer:
             if self.data_recv:  # If server receives data from the client
                 json_object = self.decode_json(self.data_recv)
 
-                temperature = json_object["temperature"]
+                temperature = json_object["temperature"]  # Get the temperature from the json object
                 self.temp = temperature
-                degrees = json_object["degrees"]
+                degrees = json_object["degrees"]  # Get the degrees from the json object
                 self.degrees = degrees
-                degrees_diff = json_object["degrees_diff"]
+                degrees_diff = json_object["degrees_diff"]  # Get the degrees difference from the json object
                 self.degrees_diff = degrees_diff
 
-                # Turn off the motor if the temperature is below or equal to 25°C
-                if temperature <= 25:
-                    self._motor.clean_up_gpio()  # Turn off the motor
-                else:
+                # Checks if the temperature is below 25°C or above 30°C and the motor doesn't need to move anymore
+                if 25 <= temperature <= 30 and 90 >= degrees_diff >= 0 != degrees:
+                    self._motor_power = True  # Set our boolean to true
                     self._motor = sp.StepperMotor()  # Turn on the motor
+                else:
+                    if motor_thread is not None:  # Check if the variable is not None
+                        if not motor_thread.is_alive():  # Check if the thread is currently working
+                            self._motor_power = False  # Set our boolean to false
+                            self._motor.clean_up_gpio()  # Turn off the motor
 
                 # Start a thread which moves the motor by the given degrees
-                if degrees < 0:
-                    degrees *= -1
-                    threading.Thread(target=self._motor.do_counterclockwise_degrees(degrees)).start()
-                else:
-                    threading.Thread(target=self._motor.do_clockwise_degrees(degrees)).start()
+                if self._motor_power:  # Check if the power is on to prevent errors
+                    if degrees < 0:  # Checks if the degrees are negative
+                        degrees *= -1  # Make the degrees positive
+                        motor_thread = Thread(target=self._motor.do_counterclockwise_degrees(degrees))
+                        motor_thread.start()
+                    elif degrees > 0:  # Checks if the degrees are positive
+                        motor_thread = Thread(target=self._motor.do_clockwise_degrees(degrees))
+                        motor_thread.start()
 
     # Function to decode json
     def decode_json(self, message):
@@ -92,8 +102,8 @@ class MyServer:
         functions = {
             "help": self.return_help,
             "info": self.return_info,
-            "reset": lambda: threading.Thread(target=self.reset_connection).start(),
-            "shutdown": lambda: threading.Thread(target=self.shutdown).start(),
+            "reset": lambda: Thread(target=self.reset_connection).start(),
+            "shutdown": lambda: Thread(target=self.shutdown).start(),
         }
 
         while not self.quit:
@@ -148,8 +158,8 @@ class MyServer:
         # Starten des Empfangsthreads für den neuen Client
         self.quit = False
 
-        self.thread_recv = threading.Thread(target=self.worker_recv)  # Setup thread for receiving messages
-        self.thread_func = threading.Thread(target=self.input_function)  # Setup thread for receiving messages
+        self.thread_recv = Thread(target=self.worker_recv)  # Setup thread for receiving messages
+        self.thread_func = Thread(target=self.input_function)  # Setup thread for receiving messages
 
         self.thread_recv.start()  # Start thread to receive messages
         self.thread_func.start()  # Start thread to input functions
