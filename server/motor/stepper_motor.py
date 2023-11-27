@@ -5,7 +5,7 @@ import RPi.GPIO as GPIO
 
 class StepperMotor:
     def __init__(self):
-        self.__pins = [17, 27, 22, 18]  # Save pins
+        self.__pins = [17, 27, 18, 22]  # Save pins
         self.__STEP_SEQUENCE = (
             (1, 0, 0, 1),
             (1, 0, 0, 0),
