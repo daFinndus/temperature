@@ -111,7 +111,7 @@ class MyClient:
                 # Sleep for three seconds
                 time.sleep(3)
             except Exception as e:  # Catch error and print
-                print(f"Error occurred in sending message: {e}")
+                print(f"Error occurred in sending message: {e}\n")
                 threading.Thread(target=self.shutdown).start()
         print("Stopped thread because self.quit is true.")
 
@@ -134,7 +134,7 @@ class MyClient:
     def shutdown(self):
         self.quit = True  # Stop the thread
         self.exit = True  # Stop the whole application
-        print("Shutting down client..")
+        print("Shutting down client..\n")
         time.sleep(1)
         self.thread_send.join()  # Wait until the thread is stopped
         print("Stopping thread..")

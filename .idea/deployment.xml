@@ -1,26 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="pi@192.168.178.111:22 password" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" autoUploadExternalChanges="true">
+  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="dafinndus@192.168.0.60:22 password" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" autoUploadExternalChanges="true">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
-      <paths name="dafinndus@192.168.0.31:22 password">
+      <paths name="dafinndus@192.168.0.60:22 password">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="pi@192.168.178.110:22 password">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="pi@192.168.178.111:22 password">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/home/pi/PyScripts/temperatur_01_07" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/dafinndus/PyScripts/temperature" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

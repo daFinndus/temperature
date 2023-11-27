@@ -1,4 +1,5 @@
 import Adafruit_ADS1x15
+import numpy as np
 
 
 class TempSensor:
@@ -21,7 +22,7 @@ class TempSensor:
         self.voltage_measurements = float(self.raw_data) / 32767.0 * 4.095
         print(self.voltage_measurements)
 
-        """# Saving constants for our equation, which we'll be using later
+        # Saving constants for our equation, which we'll be using later
         __A = 0.001129148  # 0.001129148 is the A constant of our steinhart-hart equation
         __B = 0.000234125  # 0.000234125 is the B constant of our steinhart-hart equation
         __C = 0.0000000876741  # 0.0000000876741 is the C constant of our steinhart-hart equation
@@ -33,12 +34,7 @@ class TempSensor:
         # Calculate the temperature based on our voltage values by using the steinhart-hart equation
         temp = __RES / (__VOLT / self.voltage_measurements - 1)
         temp = 1 / (__A + __B * np.log(temp) + __C * np.power(np.log(temp), 3))
-        temp = temp - 273.15  # Translate from Kelvin to Celsius"""
-
-        # Calculate the temperature based on our voltage values by using the steinhart-hart equation
-        temp = math.log((10000 / voltage) * (3300 - voltage))
-        temp = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * temp * temp)) * temp)
-        temp = temp - 273.15
+        temp = temp - 273.15  # Translate from Kelvin to Celsius
 
         # Round the temperature to 2 decimal places for readability
         temp = round(temp, 2)
