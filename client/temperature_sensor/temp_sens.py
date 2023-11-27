@@ -19,6 +19,7 @@ class TempSensor:
 
         # Convert the ADC value to a voltage
         self.voltage_measurements = float(self.raw_data) / 32767.0 * 4.095
+        print(self.voltage_measurements)
 
         # Saving constants for our equation, which we'll be using later
         __A = 0.001129148  # 0.001129148 is the A constant of our steinhart-hart equation
