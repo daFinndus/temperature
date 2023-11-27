@@ -1,5 +1,4 @@
 import Adafruit_ADS1x15
-import numpy as np
 
 
 class TempSensor:
@@ -30,10 +29,15 @@ class TempSensor:
         __RES = 10000  # 10 kΩ is the resistance of the thermistor
         __VOLT = 3.3  # 3.3 V is the voltage of our thermistor
 
-        # Calculate the temperature based on our voltage values by using the steinhart-hart equation
+        """# Calculate the temperature based on our voltage values by using the steinhart-hart equation
         temp = __RES / (__VOLT / self.voltage_measurements - 1)
         temp = 1 / (__A + __B * np.log(temp) + __C * np.power(np.log(temp), 3))
-        temp = temp - 273.15  # Translate from Kelvin to Celsius
+        temp = temp - 273.15  # Translate from Kelvin to Celsius"""
+
+        # Calculate the temperature based on our voltage values by using the steinhart-hart equation
+        temp = math.log((10000 / voltage) * (3300 - voltage))
+        temp = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * temp * temp)) * temp)
+        temp = temp - 273.15
 
         # Round the temperature to 2 decimal places for readability
         temp = round(temp, 2)
